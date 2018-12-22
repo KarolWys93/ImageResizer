@@ -26,17 +26,17 @@ public class AppMainWindow extends JFrame {
     private JButton removeFileButton;
     private JSlider scaleSlider;
     private JLabel scaleLabel;
-    private JRadioButton radioButton1;
-    private JRadioButton radioButton2;
-    private JRadioButton radioButton3;
+    private JRadioButton jpgRadioButton;
+    private JRadioButton pngRadioButton;
+    private JRadioButton bmpRadioButton;
     private JPanel fileTypePanel;
     private JButton startConvertButton;
     private JProgressBar progressBar;
     private JLabel filesCounterLabel;
     private ImagePanel previewPanel;
-    private FileTableModel fileTableModel;
     private JFileChooser fileChooser;
     private Resizer resizer;
+    private ButtonGroup exportTypeButtonGroup;
 
 
     public AppMainWindow(String windowName) {
@@ -49,8 +49,7 @@ public class AppMainWindow extends JFrame {
 
         scaleSlider.addChangeListener(changeEvent -> scaleLabel.setText(scaleSlider.getValue() + " %"));
 
-        fileTableModel = new FileTableModel();
-        fileTable.setModel(fileTableModel);
+        fileTable.setModel(new FileTableModel());
 
         resizer = new Resizer();
 
@@ -59,7 +58,7 @@ public class AppMainWindow extends JFrame {
                 fileChooser = new JFileChooser();
             }
             fileChooser.setMultiSelectionEnabled(true);
-            fileChooser.setFileFilter(new FileNameExtensionFilter("Pliki obrazów", "bmp", "jpg", "png", "jpeg"));
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Pliki obrazów", "bmp", "jpgRadioButton", "png", "jpeg"));
 
             int result = fileChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
@@ -82,12 +81,15 @@ public class AppMainWindow extends JFrame {
 
         });
 
-        startConvertButton.addActionListener(actionEvent -> {
-            File selectedFile = resizer.getFiles().get(fileTable.getSelectedRow());
-            previewPanel.setImage(selectedFile);
+        fileTable.getSelectionModel().addListSelectionListener(listSelectionEvent -> {
+            int selectedRow = fileTable.getSelectedRow();
+            if (selectedRow > -1)
+                previewPanel.setImage(resizer.getFiles().get(selectedRow));
         });
-
-
+        exportTypeButtonGroup = new ButtonGroup();
+        exportTypeButtonGroup.add(jpgRadioButton);
+        exportTypeButtonGroup.add(pngRadioButton);
+        exportTypeButtonGroup.add(bmpRadioButton);
     }
 
     /**
@@ -134,18 +136,19 @@ public class AppMainWindow extends JFrame {
         panel4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Podgląd"));
         panel4.add(previewPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(300, 300), null, null, 0, false));
         fileTypePanel = new JPanel();
-        fileTypePanel.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        fileTypePanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(fileTypePanel, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         fileTypePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Typ pliku"));
-        radioButton1 = new JRadioButton();
-        radioButton1.setText("RadioButton");
-        fileTypePanel.add(radioButton1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        radioButton2 = new JRadioButton();
-        radioButton2.setText("RadioButton");
-        fileTypePanel.add(radioButton2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        radioButton3 = new JRadioButton();
-        radioButton3.setText("RadioButton");
-        fileTypePanel.add(radioButton3, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        jpgRadioButton = new JRadioButton();
+        jpgRadioButton.setSelected(true);
+        jpgRadioButton.setText("jpg");
+        fileTypePanel.add(jpgRadioButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pngRadioButton = new JRadioButton();
+        pngRadioButton.setText("png");
+        fileTypePanel.add(pngRadioButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        bmpRadioButton = new JRadioButton();
+        bmpRadioButton.setText("bmp");
+        fileTypePanel.add(bmpRadioButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         startConvertButton = new JButton();
         startConvertButton.setText("Konwertuj");
         panel3.add(startConvertButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
