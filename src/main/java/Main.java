@@ -49,8 +49,8 @@ public class Main {
     static void closeApp(){
         int selection = JOptionPane.showConfirmDialog(
                 null,
-                "Exit "+appName+"?",
-                "Confirm exit",
+                "Zamknąć "+appName+"?",
+                "Potwierdź wyjście",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
