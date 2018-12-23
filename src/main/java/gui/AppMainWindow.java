@@ -15,6 +15,7 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -42,6 +43,7 @@ public class AppMainWindow extends JFrame {
 
     private int imageToProcess = 0;
     private int processedImage = 0;
+    private List<File> successProcessedFiles;
 
 
     public AppMainWindow(String windowName) {
@@ -110,6 +112,7 @@ public class AppMainWindow extends JFrame {
                 } else {
                     selectedType = "bmp";
                 }
+                successProcessedFiles = new ArrayList<>();
                 startProcessGUI();
                 if (customFileNameCheckBox.isSelected()) {
                     resizer.startConvert(fileChooser.getSelectedFile().toPath(), selectedType, scaleSlider.getValue(), customFileName.getText());
@@ -130,6 +133,7 @@ public class AppMainWindow extends JFrame {
         resizer.setProgressListener((convertedFile, success) -> {
             if (success) {
                 System.out.println(convertedFile.getName() + " OK");
+                successProcessedFiles.add(convertedFile);
             } else {
                 System.out.println(convertedFile.getName() + " FAIL");
             }
@@ -160,8 +164,15 @@ public class AppMainWindow extends JFrame {
         addFileButton.setEnabled(true);
         removeFileButton.setEnabled(true);
         startConvertButton.setEnabled(true);
-        resizer.removeFiles(resizer.getFiles());
+        resizer.removeFiles(successProcessedFiles);
+        successProcessedFiles = null;
         updateFileList();
+        if (fileTable.getRowCount() != 0) {
+            JOptionPane.showMessageDialog(null,
+                    "Konwersja " + fileTable.getRowCount() + " plików nie powiodła się.",
+                    "Błąd konwersji",
+                    JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private void updateFileList() {
