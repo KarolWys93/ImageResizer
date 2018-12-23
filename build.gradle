@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'wyskocki.karol'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 sourceCompatibility = 1.8
 
@@ -11,6 +11,23 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    from {
+        (configurations.runtime).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    manifest{
+        attributes 'Main-Class': 'Main',
+                'Implementation-Version': version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Built-Gradle': gradle.gradleVersion
+    }
+}
+
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
 }
