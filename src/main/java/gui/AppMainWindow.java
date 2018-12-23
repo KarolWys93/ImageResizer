@@ -34,6 +34,7 @@ public class AppMainWindow extends JFrame {
     private JProgressBar progressBar;
     private JLabel filesCounterLabel;
     private ImagePanel previewPanel;
+    private JRadioButton bmpRadioButton;
     private JFileChooser fileChooser;
     private Resizer resizer;
     private ButtonGroup exportTypeButtonGroup;
@@ -103,8 +104,10 @@ public class AppMainWindow extends JFrame {
                 String selectedType;
                 if (jpgRadioButton.isSelected()) {
                     selectedType = "jpg";
-                } else {
+                } else if (pngRadioButton.isSelected()) {
                     selectedType = "png";
+                } else {
+                    selectedType = "bmp";
                 }
                 startProcessGUI();
                 resizer.startConvert(fileChooser.getSelectedFile().toPath(), selectedType, scaleSlider.getValue());
@@ -114,6 +117,7 @@ public class AppMainWindow extends JFrame {
         exportTypeButtonGroup = new ButtonGroup();
         exportTypeButtonGroup.add(jpgRadioButton);
         exportTypeButtonGroup.add(pngRadioButton);
+        exportTypeButtonGroup.add(bmpRadioButton);
 
         progressBar.setString("");
         progressBar.setStringPainted(true);
@@ -199,7 +203,7 @@ public class AppMainWindow extends JFrame {
         panel4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Podgląd"));
         panel4.add(previewPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(300, 300), null, null, 0, false));
         fileTypePanel = new JPanel();
-        fileTypePanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        fileTypePanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(fileTypePanel, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         fileTypePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Typ pliku"));
         jpgRadioButton = new JRadioButton();
@@ -209,6 +213,9 @@ public class AppMainWindow extends JFrame {
         pngRadioButton = new JRadioButton();
         pngRadioButton.setText("png");
         fileTypePanel.add(pngRadioButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        bmpRadioButton = new JRadioButton();
+        bmpRadioButton.setText("bmp");
+        fileTypePanel.add(bmpRadioButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         startConvertButton = new JButton();
         startConvertButton.setText("Konwertuj");
         panel3.add(startConvertButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -221,6 +228,7 @@ public class AppMainWindow extends JFrame {
         scaleSlider = new JSlider();
         scaleSlider.setMajorTickSpacing(10);
         scaleSlider.setMaximum(150);
+        scaleSlider.setMinimum(1);
         scaleSlider.setMinorTickSpacing(5);
         scaleSlider.setPaintLabels(false);
         scaleSlider.setPaintTicks(false);

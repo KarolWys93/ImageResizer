@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 
 public class Resizer {
 
+    private static final String DIRECTORY_NAME = "resized";
     private ConvertProgressListener progressListener;
     private HashSet<File> filesSet = new HashSet<>();
 
@@ -43,34 +44,42 @@ public class Resizer {
 
 
     public void startConvert(Path directoryPath, String outputFileType, int scale){
+        startConvert(directoryPath, outputFileType, scale, null);
+    }
 
-        directoryPath = Paths.get(directoryPath.toString(), "resized");
+
+    public void startConvert(Path directoryPath, String outputFileType, int scale, String name){
+
+        directoryPath = Paths.get(directoryPath.toString(), DIRECTORY_NAME);
         new File(directoryPath.toString()).mkdirs();
 
 
         int cpu = Runtime.getRuntime().availableProcessors();
-        System.out.println(cpu);
+        System.out.println("Processors: " + cpu);
         ExecutorService exec = Executors.newFixedThreadPool(cpu);
 
-
-        List<Runnable> tasksList = new ArrayList<>();
+        int fileCounter = 1;
         for (File file:filesSet) {
             Path finalDirectoryPath = directoryPath;
-            tasksList.add(() -> {
-                boolean success = resize(file, finalDirectoryPath, outputFileType, scale);
-                if (progressListener!= null){
+
+            String fileName = null;
+            if (name != null)
+                fileName = String.format("%s-%d", name, fileCounter++);
+
+            String finalFileName = fileName;
+            exec.submit(() -> {
+                boolean success = resize(file, finalDirectoryPath, outputFileType, scale, finalFileName);
+                if (progressListener != null) {
                     SwingUtilities.invokeLater(() -> progressListener.convertComplete(file, success));
                 }
             });
         }
 
-        for (Runnable task:tasksList) {
-            exec.submit(task);
-        }
+        exec.shutdown();
 
     }
 
-    private boolean resize(File file, Path directoryPath, String outputFileType, int scale){
+    private boolean resize(File file, Path directoryPath, String outputFileType, int scale, String name){
 
         try {
             float scaleFactor = scale/100f;
@@ -78,7 +87,13 @@ public class Resizer {
             int newWidth = (int)(scaleFactor*originalImage.getWidth());
             int newHeight = (int)(scaleFactor*originalImage.getHeight());
 
-            File outputFile = Paths.get(directoryPath.toString(), file.getName()).toFile();
+            File outputFile;
+            if (name != null) {
+                outputFile = Paths.get(directoryPath.toString(), name + "." + outputFileType).toFile();
+            }
+            else {
+                outputFile = Paths.get(directoryPath.toString(), changeFileExtension(file.getName(), outputFileType)).toFile();
+            }
 
             BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = resizedImage.createGraphics();
@@ -95,6 +110,16 @@ public class Resizer {
         return true;
     }
 
+    private String changeFileExtension(String fileName, String type){
+
+        String[] nameParts = fileName.split("\\.");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < nameParts.length-1; i++) {
+            stringBuilder.append(nameParts[i]).append(".");
+        }
+        stringBuilder.append(type);
+        return stringBuilder.toString();
+    }
 
     public interface ConvertProgressListener{
         void convertComplete(File convertedFile, boolean success);
