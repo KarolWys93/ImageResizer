@@ -64,7 +64,7 @@ public class Resizer {
 
             String fileName = null;
             if (name != null)
-                fileName = String.format("%s-%d", name, fileCounter++);
+                fileName = String.format("%d%s", fileCounter++, name);
 
             String finalFileName = fileName;
             exec.submit(() -> {
