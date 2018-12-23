@@ -15,6 +15,7 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -28,7 +29,6 @@ public class AppMainWindow extends JFrame {
     private JLabel scaleLabel;
     private JRadioButton jpgRadioButton;
     private JRadioButton pngRadioButton;
-    private JRadioButton bmpRadioButton;
     private JPanel fileTypePanel;
     private JButton startConvertButton;
     private JProgressBar progressBar;
@@ -37,6 +37,9 @@ public class AppMainWindow extends JFrame {
     private JFileChooser fileChooser;
     private Resizer resizer;
     private ButtonGroup exportTypeButtonGroup;
+
+    private int imageToProcess = 0;
+    private int processedImage = 0;
 
 
     public AppMainWindow(String windowName) {
@@ -56,15 +59,15 @@ public class AppMainWindow extends JFrame {
         addFileButton.addActionListener(actionEvent -> {
             if (fileChooser == null) {
                 fileChooser = new JFileChooser();
+                fileChooser.setFileFilter(new FileNameExtensionFilter("Pliki obrazów", "bmp", "jpg", "png", "jpeg"));
             }
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fileChooser.setMultiSelectionEnabled(true);
-            fileChooser.setFileFilter(new FileNameExtensionFilter("Pliki obrazów", "bmp", "jpgRadioButton", "png", "jpeg"));
 
             int result = fileChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
                 resizer.addFilesToConvert(Arrays.asList(fileChooser.getSelectedFiles()));
-                fileTable.setModel(new FileTableModel(resizer.getFiles()));
-                filesCounterLabel.setText(String.format("%d plików", fileTable.getRowCount()));
+                updateFileList();
             }
         });
 
@@ -75,10 +78,7 @@ public class AppMainWindow extends JFrame {
                 filesToRemove.add(resizer.getFiles().get(id));
             }
             resizer.removeFiles(filesToRemove);
-
-            fileTable.setModel(new FileTableModel(resizer.getFiles()));
-            filesCounterLabel.setText(String.format("%d plików", fileTable.getRowCount()));
-
+            updateFileList();
         });
 
         fileTable.getSelectionModel().addListSelectionListener(listSelectionEvent -> {
@@ -86,10 +86,73 @@ public class AppMainWindow extends JFrame {
             if (selectedRow > -1)
                 previewPanel.setImage(resizer.getFiles().get(selectedRow));
         });
+
+        startConvertButton.addActionListener(actionEvent -> {
+            if (fileTable.getRowCount() == 0) {
+                return;
+            }
+            if (fileChooser == null) {
+                fileChooser = new JFileChooser();
+                fileChooser.setFileFilter(new FileNameExtensionFilter("Pliki obrazów", "bmp", "jpg", "png", "jpeg"));
+            }
+            fileChooser.setMultiSelectionEnabled(false);
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+            int result = fileChooser.showSaveDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String selectedType;
+                if (jpgRadioButton.isSelected()) {
+                    selectedType = "jpg";
+                } else {
+                    selectedType = "png";
+                }
+                startProcessGUI();
+                resizer.startConvert(fileChooser.getSelectedFile().toPath(), selectedType, scaleSlider.getValue());
+            }
+        });
+
         exportTypeButtonGroup = new ButtonGroup();
         exportTypeButtonGroup.add(jpgRadioButton);
         exportTypeButtonGroup.add(pngRadioButton);
-        exportTypeButtonGroup.add(bmpRadioButton);
+
+        progressBar.setString("");
+        progressBar.setStringPainted(true);
+
+        resizer.setProgressListener((convertedFile, success) -> {
+            if (success) {
+                System.out.println(convertedFile.getName() + " OK");
+            } else {
+                System.out.println(convertedFile.getName() + " FAIL");
+            }
+            processedImage++;
+            progressBar.setValue(processedImage);
+            progressBar.setString(String.format("%d/%d", processedImage, imageToProcess));
+            if (processedImage >= imageToProcess) {
+                endProcessGUI();
+            }
+        });
+    }
+
+    private void startProcessGUI() {
+        addFileButton.setEnabled(false);
+        removeFileButton.setEnabled(false);
+        startConvertButton.setEnabled(false);
+        progressBar.setMaximum(fileTable.getRowCount());
+        processedImage = 0;
+        imageToProcess = fileTable.getRowCount();
+    }
+
+    private void endProcessGUI() {
+        addFileButton.setEnabled(true);
+        removeFileButton.setEnabled(true);
+        startConvertButton.setEnabled(true);
+        resizer.removeFiles(resizer.getFiles());
+        updateFileList();
+    }
+
+    private void updateFileList() {
+        fileTable.setModel(new FileTableModel(resizer.getFiles()));
+        filesCounterLabel.setText(String.format("%d plików", fileTable.getRowCount()));
     }
 
     /**
@@ -136,7 +199,7 @@ public class AppMainWindow extends JFrame {
         panel4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Podgląd"));
         panel4.add(previewPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(300, 300), null, null, 0, false));
         fileTypePanel = new JPanel();
-        fileTypePanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        fileTypePanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(fileTypePanel, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         fileTypePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Typ pliku"));
         jpgRadioButton = new JRadioButton();
@@ -146,9 +209,6 @@ public class AppMainWindow extends JFrame {
         pngRadioButton = new JRadioButton();
         pngRadioButton.setText("png");
         fileTypePanel.add(pngRadioButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        bmpRadioButton = new JRadioButton();
-        bmpRadioButton.setText("bmp");
-        fileTypePanel.add(bmpRadioButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         startConvertButton = new JButton();
         startConvertButton.setText("Konwertuj");
         panel3.add(startConvertButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
