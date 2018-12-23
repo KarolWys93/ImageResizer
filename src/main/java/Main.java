@@ -20,15 +20,21 @@ public class Main {
 
     public static void main(String[] args) {
 
-        EventQueue.invokeLater(() -> runGUI());
+        if (args.length > 0 && args[0].equals("--native")){
+            EventQueue.invokeLater(() -> runGUI(true));
+        }else {
+            EventQueue.invokeLater(() -> runGUI(false));
+        }
     }
 
-    private static void runGUI(){
+    private static void runGUI(boolean nativeGui){
 
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (nativeGui) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         frame = new AppMainWindow(appName);
