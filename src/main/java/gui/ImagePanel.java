@@ -10,25 +10,42 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 public class ImagePanel extends JPanel {
+    private ExecutorService exec;
     private BufferedImage image;
+    private ImageIcon loadingGif;
+    private boolean loading = false;
 
     public ImagePanel(File imageFile) {
+        loadingGif = new ImageIcon(ImagePanel.class.getResource("/images/loading.gif"));
+        exec = Executors.newSingleThreadExecutor();
         setImage(imageFile);
     }
 
-    public void setImage(File imageFile){
+    public void setImage(File imageFile) {
         if (imageFile != null) {
-            try {
-                image = ImageIO.read(imageFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            loading = true;
+            image = null;
+            System.gc();
+            exec.execute(() -> {
+                        try {
+                            image = ImageIO.read(imageFile);
+                            SwingUtilities.invokeLater(() -> {
+                                loading = false;
+                                this.repaint();
+                            });
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+            );
+            repaint();
         }
-        this.repaint();
     }
 
     @Override
@@ -45,7 +62,13 @@ public class ImagePanel extends JPanel {
             int imageY = (this.getHeight()/2) - (imageHeight/2);
 
             g.drawImage(image, imageX, imageY, imageWidth, imageHeight, this);
-        }else {
+        } else if(loading) {
+            int imageWidth = loadingGif.getImage().getWidth(null);
+            int imageHeight = loadingGif.getImage().getHeight(null);
+            int imageX = (this.getWidth()/2) - (imageWidth/2);
+            int imageY = (this.getHeight()/2) - (imageHeight/2);
+            g.drawImage(loadingGif.getImage(), imageX, imageY, imageWidth, imageHeight, this);
+        } else {
             g.setColor(Color.LIGHT_GRAY);
             g.drawRect(0,0, frameSize, frameSize);
         }

@@ -157,9 +157,10 @@ public class AppMainWindow extends JFrame {
         addFileButton.setEnabled(false);
         removeFileButton.setEnabled(false);
         startConvertButton.setEnabled(false);
-        progressBar.setMaximum(fileTable.getRowCount());
         processedImage = 0;
         imageToProcess = fileTable.getRowCount();
+        progressBar.setMaximum(fileTable.getRowCount());
+        progressBar.setString(String.format("%d/%d", processedImage, imageToProcess));
     }
 
     private void endProcessGUI() {
