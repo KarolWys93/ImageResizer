@@ -1,2 +1,2 @@
 # ImageResizer
-A small tool for resizing images
+ImageResizer is a small tool for resizing images. This program was created for my father to help him in his work. Sometimes he has to resize several photos and rename ones to specified format. Resizing and manually renaming each image separatly is not convenient, so this tool should be helpful.
